@@ -1,17 +1,15 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class PlayerCam : MonoBehaviour
 {
-
-    public float sensX;
-    public float sensY;
+    public float sensX = 100f;
+    public float sensY = 100f;
 
     public Transform orientation;
 
     float xRotation;
     float yRotation;
+
     void Start()
     {
         Cursor.lockState = CursorLockMode.Locked;
@@ -20,9 +18,11 @@ public class PlayerCam : MonoBehaviour
 
     void Update()
     {
-        // Get mouse input
-        float mouseX = Input.GetAxisRaw("Mouse X") * Time.deltaTime * sensX;
-        float mouseY = Input.GetAxisRaw("Mouse Y") * Time.deltaTime * sensY;
+        // Always fetch the current sensitivity multiplier
+        float sensitivityMultiplier = PlayerPrefs.GetFloat("MouseSensitivity", 1f);
+
+        float mouseX = Input.GetAxisRaw("Mouse X") * Time.deltaTime * sensX * sensitivityMultiplier;
+        float mouseY = Input.GetAxisRaw("Mouse Y") * Time.deltaTime * sensY * sensitivityMultiplier;
 
         yRotation += mouseX;
         xRotation -= mouseY;
