@@ -17,7 +17,6 @@ public class PlayerInteraction : MonoBehaviour
                 BoatController boat = boats[0].GetComponentInParent<BoatController>(); // Search in parent objects
                 if (boat != null)
                 {
-                    Debug.Log("Entering Boat: " + boat.gameObject.name);
                     boat.EnterBoat(gameObject);
                 }
             }

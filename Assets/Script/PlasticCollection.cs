@@ -14,7 +14,6 @@ public class PlasticCollection : MonoBehaviour
         {
             Plastic++;
             PlasticText.text = "Plastic: " + Plastic.ToString(); // Update text property
-            Debug.Log("Plastic Collected: " + Plastic);
             Destroy(other.gameObject);
         }
     }

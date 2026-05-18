@@ -107,7 +107,6 @@ public class PlayerMovement : MonoBehaviour
     {
         if (((1 << other.gameObject.layer) & water) != 0)
         {
-            Debug.Log("Player touched water! Respawning...");
             Respawn();
         }
     }

@@ -38,8 +38,6 @@ public class GameManager : MonoBehaviour
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        Debug.Log($"Scene loaded: {scene.name}");
-
         // Always try to assign money text (exists in all levels)
         moneyText = GameObject.Find("MoneyText")?.GetComponent<TextMeshProUGUI>();
 

@@ -133,7 +133,6 @@ public class BoatController : MonoBehaviour
 
                 if (currentRowTime <= 0f)
                 {
-                    Debug.Log("Time's up! Forcing exit with penalty.");
                     ForceExitWithPenalty();
                 }
             }
@@ -182,8 +181,6 @@ public class BoatController : MonoBehaviour
             StopCoroutine(hideExplanationCoroutine);
 
         hideExplanationCoroutine = StartCoroutine(HideExplanationUIAfterDelay(5f));
-
-        Debug.Log("Player entered boat. Timer and explanation UI shown.");
     }
 
     public void ExitBoat()
@@ -287,8 +284,6 @@ public class BoatController : MonoBehaviour
 
         if (rightPaddleAnimator != null)
             rightPaddleAnimator.SetBool("IsRowing", false);
-
-        Debug.Log("Penalty applied: plastic reset due to timeout.");
         player = null;
     }
 
