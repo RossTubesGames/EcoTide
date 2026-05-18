@@ -1,26 +1,34 @@
 using System.Collections;
-using System.Collections.Generic;
-using UnityEngine.SceneManagement; // Needed for scene loading
 using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class Level2Unlock : MonoBehaviour
 {
-    public TextMeshProUGUI interactionText; // Assign in Inspector
-    public Transform player; // Assign the player in Inspector
-    public Transform button; // Assign the button object in Inspector
-    private bool LevelUnlocked = false; // Prevents UI from updating after unlocking
+    [Header("UI")]
+    public TextMeshProUGUI interactionText;
+
+    [Header("Interaction")]
+    public Transform player;
+    public Transform button;
+    public float interactionRange = 3f;
+
+    [Header("Unlock Requirements")]
+    public GameObject[] requiredBuildings;
+    public int moneyAmount = 0;
+
+    [Header("Level Loading")]
+    public string unlockDescription = "Level 2";
+    public string sceneToLoad = "Level2";
+
+    private bool levelUnlocked = false;
     private bool isNearButton = false;
-    public float interactionRange = 3f; // Distance required to interact
-    public int moneyAmount; // Cost to unlock
-    public string unlockDescription = "Level2"; // Description (editable in Inspector)
-    public string sceneToLoad = "Level2"; // Name of the scene to load (set in Inspector)
 
     private void Start()
     {
         if (interactionText != null)
         {
-            interactionText.gameObject.SetActive(false); // Hide text initially
+            interactionText.gameObject.SetActive(false);
         }
     }
 
@@ -28,49 +36,81 @@ public class Level2Unlock : MonoBehaviour
     {
         if (interactionText == null || button == null || player == null)
         {
-            Debug.LogError("Missing References! Make sure all public variables are assigned in the Inspector.");
             return;
         }
 
-        if (LevelUnlocked) return; // Stop UI updates if already unlocked
-
-        // Check if the player is near the button
-        isNearButton = Vector3.Distance(button.position, player.position) < interactionRange;
-
-        if (isNearButton)
+        if (levelUnlocked)
         {
-            interactionText.gameObject.SetActive(true);
-            interactionText.text = $"Press F to Unlock {unlockDescription} for {moneyAmount}$";
+            return;
+        }
 
-            // Check if player presses 'F'
-            if (Input.GetKeyDown(KeyCode.F) && GameManager.Instance.Money >= moneyAmount)
+        isNearButton = Vector3.Distance(button.position, player.position) <= interactionRange;
+
+        if (!isNearButton)
+        {
+            interactionText.gameObject.SetActive(false);
+            return;
+        }
+
+        interactionText.gameObject.SetActive(true);
+
+        if (!AreAllBuildingsUnlocked())
+        {
+            interactionText.text = "Unlock all buildings first.";
+            return;
+        }
+
+        interactionText.text = "Press F to travel to " + unlockDescription;
+
+        if (Input.GetKeyDown(KeyCode.F))
+        {
+            if (GameManager.Instance != null && GameManager.Instance.Money >= moneyAmount)
             {
-                if (GameManager.Instance.SpendMoney(moneyAmount)) // Deduct money
+                if (GameManager.Instance.SpendMoney(moneyAmount))
                 {
-                    interactionText.text = $"{unlockDescription} Unlocked!";
-                    LevelUnlocked = true;
-
-                    StartCoroutine(LoadNextLevel()); // Start coroutine for scene load
+                    UnlockLevel();
                 }
             }
         }
-        else
+    }
+
+    private bool AreAllBuildingsUnlocked()
+    {
+        if (requiredBuildings == null || requiredBuildings.Length == 0)
         {
-            interactionText.gameObject.SetActive(false);
+            return false;
         }
+
+        for (int i = 0; i < requiredBuildings.Length; i++)
+        {
+            if (requiredBuildings[i] == null)
+            {
+                return false;
+            }
+
+            if (!requiredBuildings[i].activeSelf)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private void UnlockLevel()
+    {
+        levelUnlocked = true;
+        interactionText.text = unlockDescription + " unlocked!";
+        StartCoroutine(LoadNextLevel());
     }
 
     private IEnumerator LoadNextLevel()
     {
-        yield return new WaitForSeconds(2f); // Small delay before transfer (optional)
+        yield return new WaitForSeconds(1.5f);
 
         if (!string.IsNullOrEmpty(sceneToLoad))
         {
             SceneManager.LoadScene(sceneToLoad);
-        }
-        else
-        {
-            Debug.LogError("Scene name not set in Inspector!");
         }
     }
 }

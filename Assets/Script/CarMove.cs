@@ -78,34 +78,36 @@ public class CarMove : MonoBehaviour
         int collectedPlastic = (plasticCollection != null ? plasticCollection.Plastic : 0) +
                                (plasticCollectionBigNet != null ? plasticCollectionBigNet.Plastic : 0);
 
-        storedPlastic += collectedPlastic; // Store the collected plastic
-        ResetPlasticCounts(); // Reset the boat counters to 0
+        if (collectedPlastic <= 0)
+        {
+            interactionText.text = "Come back with some plastic!";
+            messageTimer = messageDuration;
+            return;
+        }
 
-        // Add money for each delivered plastic box
-        GameManager.Instance.AddMoney(storedPlastic * 10);
+        storedPlastic += collectedPlastic;
 
-        // Activate boxes if more than 5 plastic was collected
+        GameManager.Instance.AddMoney(collectedPlastic * 10);
+
+        ResetPlasticCounts();
+
         if (storedPlastic >= 5 && boxes != null)
         {
             boxes.SetActive(true);
         }
 
-        if (storedPlastic == 0)
+        if (storedPlastic > 0 && storedPlastic < 10)
         {
-            interactionText.text = "Come back with some plastic!";
-        }
-        else if (storedPlastic > 0 && storedPlastic < 10)
-        {
-            interactionText.text = $"Great! Keep it up! (Total: {storedPlastic}/10)";
+            interactionText.text = "Great! Keep it up! (Total: " + storedPlastic + "/10)";
         }
         else if (storedPlastic >= 10)
         {
             interactionText.text = "The car is leaving!";
-            storedPlastic = 0; // Reset after car leaves
+            storedPlastic = 0;
             StartCoroutine(MoveRoutine());
         }
 
-        messageTimer = messageDuration; // Keep the message on screen
+        messageTimer = messageDuration;
     }
 
     private void ResetPlasticCounts()
