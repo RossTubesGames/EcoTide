@@ -1,5 +1,4 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class TurtleEggNest : MonoBehaviour
@@ -8,15 +7,45 @@ public class TurtleEggNest : MonoBehaviour
     public GameObject babyTurtlePrefab;
     public Transform[] spawnPoints;
     public Transform waterTarget;
+    public int turtlesToSpawn = 5;
     public float delayBetweenSpawns = 1f;
+    public float spawnHeightOffset = 0.2f;
+
+    [Header("Optional")]
+    public Transform spawnedTurtleParent;
 
     [Header("State")]
     public bool hasHatched = false;
+
+    private void Start()
+    {
+        hasHatched = false;
+    }
+
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.H))
+        {
+            HatchEggs();
+        }
+    }
 
     public void HatchEggs()
     {
         if (hasHatched)
         {
+            return;
+        }
+
+        if (babyTurtlePrefab == null)
+        {
+            Debug.LogError("Baby turtle prefab is missing.");
+            return;
+        }
+
+        if (spawnPoints == null || spawnPoints.Length == 0)
+        {
+            Debug.LogError("No turtle spawn points assigned.");
             return;
         }
 
@@ -26,16 +55,38 @@ public class TurtleEggNest : MonoBehaviour
 
     private IEnumerator SpawnTurtles()
     {
-        for (int i = 0; i < spawnPoints.Length; i++)
+        int spawnCount = Mathf.Min(turtlesToSpawn, spawnPoints.Length);
+
+        for (int i = 0; i < spawnCount; i++)
         {
-            GameObject turtle = Instantiate(babyTurtlePrefab, spawnPoints[i].position, spawnPoints[i].rotation);
+            Transform spawnPoint = spawnPoints[i];
+
+            if (spawnPoint == null)
+            {
+                continue;
+            }
+
+            Vector3 spawnPosition = spawnPoint.position + Vector3.up * spawnHeightOffset;
+
+            GameObject turtle = Instantiate(
+                babyTurtlePrefab,
+                spawnPosition,
+                spawnPoint.rotation
+            );
+
+            if (spawnedTurtleParent != null)
+            {
+                turtle.transform.SetParent(spawnedTurtleParent);
+            }
 
             BabyTurtle babyTurtle = turtle.GetComponent<BabyTurtle>();
 
-            if (babyTurtle != null)
+            if (babyTurtle != null && waterTarget != null)
             {
                 babyTurtle.SetTarget(waterTarget);
             }
+
+            Debug.Log("Spawned baby turtle " + (i + 1));
 
             yield return new WaitForSeconds(delayBetweenSpawns);
         }

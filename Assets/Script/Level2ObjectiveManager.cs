@@ -1,19 +1,27 @@
+using System.Collections;
 using TMPro;
 using UnityEngine;
 
 public class Level2ObjectiveManager : MonoBehaviour
 {
     [Header("Animal Objective")]
-    public int animalsNeeded = 3;
-    public int animalsHealed = 0;
+    public WoundedAnimal[] animalsToHeal;
 
     [Header("Turtle Objective")]
     public GameObject turtleObjectiveObjects;
+    public TurtleEggNest turtleEggNest;
+    public float eggHatchCountdown = 30f;
+
+    [Header("Turtle Saving")]
     public int turtlesNeeded = 5;
     public int turtlesSaved = 0;
 
     [Header("UI")]
     public TextMeshProUGUI objectiveText;
+    public TextMeshProUGUI timerText;
+
+    private bool turtleObjectiveStarted = false;
+    private bool eggsHatched = false;
 
     private void Start()
     {
@@ -22,16 +30,104 @@ public class Level2ObjectiveManager : MonoBehaviour
             turtleObjectiveObjects.SetActive(false);
         }
 
+        if (timerText != null)
+        {
+            timerText.gameObject.SetActive(false);
+        }
+
         UpdateObjectiveText();
     }
 
-    public void AnimalHealed()
+    private void Update()
     {
-        animalsHealed++;
-
-        if (animalsHealed >= animalsNeeded)
+        if (!turtleObjectiveStarted)
         {
-            StartTurtleObjective();
+            CheckAllAnimalsHealed();
+        }
+    }
+
+    private void CheckAllAnimalsHealed()
+    {
+        if (animalsToHeal == null || animalsToHeal.Length == 0)
+        {
+            return;
+        }
+
+        for (int i = 0; i < animalsToHeal.Length; i++)
+        {
+            if (animalsToHeal[i] == null || !animalsToHeal[i].isHealed)
+            {
+                return;
+            }
+        }
+
+        StartTurtleObjective();
+    }
+
+    private void StartTurtleObjective()
+    {
+        turtleObjectiveStarted = true;
+
+        PlayerInventory playerInventory = FindObjectOfType<PlayerInventory>();
+
+        if (playerInventory != null)
+        {
+            playerInventory.RemoveHeldBowl();
+        }
+
+        if (turtleObjectiveObjects != null)
+        {
+            turtleObjectiveObjects.SetActive(true);
+        }
+
+        StartCoroutine(EggHatchTimer());
+    }
+
+    private IEnumerator EggHatchTimer()
+    {
+        float timeLeft = eggHatchCountdown;
+
+        if (timerText != null)
+        {
+            timerText.gameObject.SetActive(true);
+        }
+
+        while (timeLeft > 0)
+        {
+            if (timerText != null)
+            {
+                timerText.text = "Eggs hatch in: " + Mathf.CeilToInt(timeLeft);
+            }
+
+            if (objectiveText != null)
+            {
+                objectiveText.text = "Return to the beach before the eggs hatch.";
+            }
+
+            timeLeft -= Time.deltaTime;
+            yield return null;
+        }
+
+        HatchEggs();
+    }
+
+    private void HatchEggs()
+    {
+        if (eggsHatched)
+        {
+            return;
+        }
+
+        eggsHatched = true;
+
+        if (timerText != null)
+        {
+            timerText.gameObject.SetActive(false);
+        }
+
+        if (turtleEggNest != null)
+        {
+            turtleEggNest.HatchEggs();
         }
 
         UpdateObjectiveText();
@@ -40,23 +136,17 @@ public class Level2ObjectiveManager : MonoBehaviour
     public void TurtleSaved()
     {
         turtlesSaved++;
-
         UpdateObjectiveText();
 
         if (turtlesSaved >= turtlesNeeded)
         {
-            Debug.Log("All baby turtles reached the ocean. Level complete.");
-        }
-    }
+            if (objectiveText != null)
+            {
+                objectiveText.text = "You saved the baby turtles!";
+            }
 
-    private void StartTurtleObjective()
-    {
-        if (turtleObjectiveObjects != null)
-        {
-            turtleObjectiveObjects.SetActive(true);
+            Debug.Log("All baby turtles saved.");
         }
-
-        Debug.Log("All animals saved. Turtle objective started.");
     }
 
     private void UpdateObjectiveText()
@@ -66,9 +156,13 @@ public class Level2ObjectiveManager : MonoBehaviour
             return;
         }
 
-        if (animalsHealed < animalsNeeded)
+        if (!turtleObjectiveStarted)
         {
-            objectiveText.text = "Save the forest animals: " + animalsHealed + "/" + animalsNeeded;
+            objectiveText.text = "Save the forest animals.";
+        }
+        else if (!eggsHatched)
+        {
+            objectiveText.text = "Return to the beach before the eggs hatch.";
         }
         else
         {

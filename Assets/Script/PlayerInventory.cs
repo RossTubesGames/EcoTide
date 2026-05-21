@@ -107,4 +107,16 @@ public class PlayerInventory : MonoBehaviour
     {
         return heldBowl != null && heldBowl.hasSoup;
     }
+
+    public void RemoveHeldBowl()
+    {
+        if (heldBowl != null)
+        {
+            Destroy(heldBowl.gameObject);
+            heldBowl = null;
+        }
+
+        isHoldingEmptyBowl = false;
+        isHoldingSoupBowl = false;
+    }
 }

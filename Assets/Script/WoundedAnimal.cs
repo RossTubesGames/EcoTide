@@ -22,6 +22,9 @@ public class WoundedAnimal : MonoBehaviour
     public float stuckCheckTime = 2f;
     public float stuckSpeedThreshold = 0.05f;
 
+    [Header("Animation")]
+    public string speedParameterName = "Speed";
+
     private PlayerInventory playerInventory;
     private float wanderTimer;
     private float stuckTimer;
@@ -50,6 +53,11 @@ public class WoundedAnimal : MonoBehaviour
 
         SetAnimationSpeed(0f);
         UpdateVisuals();
+
+        if (isHealed)
+        {
+            PickNewWanderPoint();
+        }
     }
 
     private void Update()
@@ -98,13 +106,6 @@ public class WoundedAnimal : MonoBehaviour
         if (agent != null)
         {
             agent.isStopped = false;
-        }
-
-        Level2ObjectiveManager objectiveManager = FindObjectOfType<Level2ObjectiveManager>();
-
-        if (objectiveManager != null)
-        {
-            objectiveManager.AnimalHealed();
         }
 
         PickNewWanderPoint();
@@ -183,7 +184,7 @@ public class WoundedAnimal : MonoBehaviour
     {
         if (animator != null)
         {
-            animator.SetFloat("Speed", speed);
+            animator.SetFloat(speedParameterName, speed);
         }
     }
 
