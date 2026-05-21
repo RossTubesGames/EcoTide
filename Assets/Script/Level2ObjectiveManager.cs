@@ -4,6 +4,9 @@ using UnityEngine;
 
 public class Level2ObjectiveManager : MonoBehaviour
 {
+    [Header("Shed Objective")]
+    public GameObject shedObject;
+
     [Header("Animal Objective")]
     public WoundedAnimal[] animalsToHeal;
 
@@ -19,6 +22,8 @@ public class Level2ObjectiveManager : MonoBehaviour
     [Header("UI")]
     public TextMeshProUGUI objectiveText;
     public TextMeshProUGUI timerText;
+    public TextMeshProUGUI introPopupText;
+    public float introPopupTime = 10f;
 
     private bool turtleObjectiveStarted = false;
     private bool eggsHatched = false;
@@ -35,6 +40,7 @@ public class Level2ObjectiveManager : MonoBehaviour
             timerText.gameObject.SetActive(false);
         }
 
+        StartCoroutine(ShowIntroPopup());
         UpdateObjectiveText();
     }
 
@@ -43,11 +49,30 @@ public class Level2ObjectiveManager : MonoBehaviour
         if (!turtleObjectiveStarted)
         {
             CheckAllAnimalsHealed();
+            UpdateObjectiveText();
+        }
+    }
+
+    private IEnumerator ShowIntroPopup()
+    {
+        if (introPopupText != null)
+        {
+            introPopupText.text = "Collect mushrooms and tomatoes with E. Unlock the shed to cook soup for the animals.";
+            introPopupText.gameObject.SetActive(true);
+
+            yield return new WaitForSeconds(introPopupTime);
+
+            introPopupText.gameObject.SetActive(false);
         }
     }
 
     private void CheckAllAnimalsHealed()
     {
+        if (shedObject != null && !shedObject.activeInHierarchy)
+        {
+            return;
+        }
+
         if (animalsToHeal == null || animalsToHeal.Length == 0)
         {
             return;
@@ -62,6 +87,26 @@ public class Level2ObjectiveManager : MonoBehaviour
         }
 
         StartTurtleObjective();
+    }
+
+    private int GetAnimalsHealedCount()
+    {
+        int count = 0;
+
+        if (animalsToHeal == null)
+        {
+            return count;
+        }
+
+        for (int i = 0; i < animalsToHeal.Length; i++)
+        {
+            if (animalsToHeal[i] != null && animalsToHeal[i].isHealed)
+            {
+                count++;
+            }
+        }
+
+        return count;
     }
 
     private void StartTurtleObjective()
@@ -138,14 +183,9 @@ public class Level2ObjectiveManager : MonoBehaviour
         turtlesSaved++;
         UpdateObjectiveText();
 
-        if (turtlesSaved >= turtlesNeeded)
+        if (turtlesSaved >= turtlesNeeded && objectiveText != null)
         {
-            if (objectiveText != null)
-            {
-                objectiveText.text = "You saved the baby turtles!";
-            }
-
-            Debug.Log("All baby turtles saved.");
+            objectiveText.text = "You saved all the baby turtles!";
         }
     }
 
@@ -156,9 +196,16 @@ public class Level2ObjectiveManager : MonoBehaviour
             return;
         }
 
-        if (!turtleObjectiveStarted)
+        if (shedObject != null && !shedObject.activeInHierarchy)
         {
-            objectiveText.text = "Save the forest animals.";
+            objectiveText.text = "Unlock the shed: 0/1";
+        }
+        else if (!turtleObjectiveStarted)
+        {
+            int healed = GetAnimalsHealedCount();
+            int total = animalsToHeal != null ? animalsToHeal.Length : 0;
+
+            objectiveText.text = "Save the forest animals: " + healed + "/" + total;
         }
         else if (!eggsHatched)
         {
