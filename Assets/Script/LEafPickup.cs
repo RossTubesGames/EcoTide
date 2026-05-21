@@ -84,21 +84,18 @@ public class LEafPickup : MonoBehaviour
 
     private void FollowHoldPoint()
     {
-        if (holdPoint == null)
+        if (holdPoint != null)
         {
-            return;
+            transform.SetParent(holdPoint);
         }
 
-        transform.localPosition = holdLocalPosition;
-        transform.localRotation = Quaternion.Euler(holdLocalRotation);
+        Level2ObjectiveManager objectiveManager = FindObjectOfType<Level2ObjectiveManager>();
 
-        if (shadowZone != null)
+        if (objectiveManager != null)
         {
-            shadowZone.transform.position = new Vector3(
-                holdPoint.position.x,
-                shadowZone.transform.position.y,
-                holdPoint.position.z
-            );
+            objectiveManager.LeafPickedUp();
         }
+
+        FollowHoldPoint();
     }
 }

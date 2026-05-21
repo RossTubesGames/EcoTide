@@ -15,6 +15,9 @@ public class Level2ObjectiveManager : MonoBehaviour
     public TurtleEggNest turtleEggNest;
     public float eggHatchCountdown = 30f;
 
+    [Header("Ending")]
+    public GameObject endingSequence;
+
     [Header("Turtle Saving")]
     public int turtlesNeeded = 5;
     public int turtlesSaved = 0;
@@ -125,6 +128,21 @@ public class Level2ObjectiveManager : MonoBehaviour
             turtleObjectiveObjects.SetActive(true);
         }
 
+        UpdateObjectiveText();
+    }
+
+    public void LeafPickedUp()
+    {
+        if (!turtleObjectiveStarted || eggsHatched)
+        {
+            return;
+        }
+
+        if (objectiveText != null)
+        {
+            objectiveText.text = "Return to the beach. Keep the leaf shadow over the baby turtles.";
+        }
+
         StartCoroutine(EggHatchTimer());
     }
 
@@ -187,6 +205,19 @@ public class Level2ObjectiveManager : MonoBehaviour
         {
             objectiveText.text = "You saved all the baby turtles!";
         }
+
+        if (turtlesSaved >= turtlesNeeded)
+        {
+            if (objectiveText != null)
+            {
+                objectiveText.text = "You saved all the baby turtles!";
+            }
+
+            if (endingSequence != null)
+            {
+                endingSequence.SetActive(true);
+            }
+        }
     }
 
     private void UpdateObjectiveText()
@@ -209,7 +240,7 @@ public class Level2ObjectiveManager : MonoBehaviour
         }
         else if (!eggsHatched)
         {
-            objectiveText.text = "Return to the beach before the eggs hatch.";
+            objectiveText.text = "Find the shadow leaf: 0/1";
         }
         else
         {
