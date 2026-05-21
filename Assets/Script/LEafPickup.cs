@@ -9,7 +9,6 @@ public class LEafPickup : MonoBehaviour
 
     [Header("Hold Settings")]
     public Transform holdPoint;
-    public GameObject leafVisual;
     public GameObject shadowZone;
 
     [Header("Hold Offset")]
@@ -79,16 +78,6 @@ public class LEafPickup : MonoBehaviour
             transform.SetParent(holdPoint);
         }
 
-        FollowHoldPoint();
-    }
-
-    private void FollowHoldPoint()
-    {
-        if (holdPoint != null)
-        {
-            transform.SetParent(holdPoint);
-        }
-
         Level2ObjectiveManager objectiveManager = FindObjectOfType<Level2ObjectiveManager>();
 
         if (objectiveManager != null)
@@ -97,5 +86,25 @@ public class LEafPickup : MonoBehaviour
         }
 
         FollowHoldPoint();
+    }
+
+    private void FollowHoldPoint()
+    {
+        if (holdPoint == null)
+        {
+            return;
+        }
+
+        transform.localPosition = holdLocalPosition;
+        transform.localRotation = Quaternion.Euler(holdLocalRotation);
+
+        if (shadowZone != null)
+        {
+            shadowZone.transform.position = new Vector3(
+                holdPoint.position.x,
+                shadowZone.transform.position.y,
+                holdPoint.position.z
+            );
+        }
     }
 }

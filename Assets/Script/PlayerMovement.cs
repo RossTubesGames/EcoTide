@@ -70,7 +70,11 @@ public class PlayerMovement : MonoBehaviour
             Invoke(nameof(ResetJump), jumpCoolDown);
         }
     }
-
+    public void UnlockMouse()
+    {
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+    }
     private void movePlayer()
     {
         moveDirection = orientation.forward * verticalInput + orientation.right * horizontalInput;

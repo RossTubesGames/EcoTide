@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class TurtleEggNest : MonoBehaviour
@@ -14,19 +15,23 @@ public class TurtleEggNest : MonoBehaviour
     [Header("Optional")]
     public Transform spawnedTurtleParent;
 
+    [Header("Manager")]
+    public Level2ObjectiveManager objectiveManager;
+
     [Header("State")]
     public bool hasHatched = false;
+
+    private readonly List<GameObject> spawnedTurtles = new List<GameObject>();
+    private bool finishedSpawning = false;
 
     private void Start()
     {
         hasHatched = false;
-    }
+        finishedSpawning = false;
 
-    private void Update()
-    {
-        if (Input.GetKeyDown(KeyCode.H))
+        if (objectiveManager == null)
         {
-            HatchEggs();
+            objectiveManager = FindObjectOfType<Level2ObjectiveManager>();
         }
     }
 
@@ -74,6 +79,8 @@ public class TurtleEggNest : MonoBehaviour
                 spawnPoint.rotation
             );
 
+            spawnedTurtles.Add(turtle);
+
             if (spawnedTurtleParent != null)
             {
                 turtle.transform.SetParent(spawnedTurtleParent);
@@ -86,9 +93,30 @@ public class TurtleEggNest : MonoBehaviour
                 babyTurtle.SetTarget(waterTarget);
             }
 
-            Debug.Log("Spawned baby turtle " + (i + 1));
-
             yield return new WaitForSeconds(delayBetweenSpawns);
+        }
+
+        finishedSpawning = true;
+        StartCoroutine(CheckWhenAllTurtlesAreGone());
+    }
+
+    private IEnumerator CheckWhenAllTurtlesAreGone()
+    {
+        while (true)
+        {
+            spawnedTurtles.RemoveAll(turtle => turtle == null);
+
+            if (finishedSpawning && spawnedTurtles.Count == 0)
+            {
+                if (objectiveManager != null)
+                {
+                    objectiveManager.CheckTurtleFailure();
+                }
+
+                yield break;
+            }
+
+            yield return new WaitForSeconds(0.5f);
         }
     }
 }

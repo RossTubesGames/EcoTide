@@ -18,6 +18,9 @@ public class Level2ObjectiveManager : MonoBehaviour
     [Header("Ending")]
     public GameObject endingSequence;
 
+    [Header("Fail State")]
+    public GameObject failPanel;
+
     [Header("Turtle Saving")]
     public int turtlesNeeded = 5;
     public int turtlesSaved = 0;
@@ -28,8 +31,15 @@ public class Level2ObjectiveManager : MonoBehaviour
     public TextMeshProUGUI introPopupText;
     public float introPopupTime = 10f;
 
+    [Header("Leaf Tutorial")]
+    public TextMeshProUGUI leafTutorialText;
+    public float leafTutorialTime = 8f;
+
     private bool turtleObjectiveStarted = false;
     private bool eggsHatched = false;
+    private bool leafHasBeenPickedUp = false;
+    private bool endingStarted = false;
+    private bool failedTurtleObjective = false;
 
     private void Start()
     {
@@ -41,6 +51,26 @@ public class Level2ObjectiveManager : MonoBehaviour
         if (timerText != null)
         {
             timerText.gameObject.SetActive(false);
+        }
+
+        if (introPopupText != null)
+        {
+            introPopupText.gameObject.SetActive(false);
+        }
+
+        if (leafTutorialText != null)
+        {
+            leafTutorialText.gameObject.SetActive(false);
+        }
+
+        if (endingSequence != null)
+        {
+            endingSequence.SetActive(false);
+        }
+
+        if (failPanel != null)
+        {
+            failPanel.SetActive(false);
         }
 
         StartCoroutine(ShowIntroPopup());
@@ -58,15 +88,17 @@ public class Level2ObjectiveManager : MonoBehaviour
 
     private IEnumerator ShowIntroPopup()
     {
-        if (introPopupText != null)
+        if (introPopupText == null)
         {
-            introPopupText.text = "Collect mushrooms and tomatoes with E. Unlock the shed to cook soup for the animals.";
-            introPopupText.gameObject.SetActive(true);
-
-            yield return new WaitForSeconds(introPopupTime);
-
-            introPopupText.gameObject.SetActive(false);
+            yield break;
         }
+
+        introPopupText.text = "Collect mushrooms and tomatoes with E. Unlock the shed to cook soup for the animals.";
+        introPopupText.gameObject.SetActive(true);
+
+        yield return new WaitForSeconds(introPopupTime);
+
+        introPopupText.gameObject.SetActive(false);
     }
 
     private void CheckAllAnimalsHealed()
@@ -92,28 +124,13 @@ public class Level2ObjectiveManager : MonoBehaviour
         StartTurtleObjective();
     }
 
-    private int GetAnimalsHealedCount()
-    {
-        int count = 0;
-
-        if (animalsToHeal == null)
-        {
-            return count;
-        }
-
-        for (int i = 0; i < animalsToHeal.Length; i++)
-        {
-            if (animalsToHeal[i] != null && animalsToHeal[i].isHealed)
-            {
-                count++;
-            }
-        }
-
-        return count;
-    }
-
     private void StartTurtleObjective()
     {
+        if (turtleObjectiveStarted)
+        {
+            return;
+        }
+
         turtleObjectiveStarted = true;
 
         PlayerInventory playerInventory = FindObjectOfType<PlayerInventory>();
@@ -133,17 +150,40 @@ public class Level2ObjectiveManager : MonoBehaviour
 
     public void LeafPickedUp()
     {
-        if (!turtleObjectiveStarted || eggsHatched)
+        if (leafHasBeenPickedUp)
         {
             return;
         }
 
-        if (objectiveText != null)
+        if (!turtleObjectiveStarted || eggsHatched || failedTurtleObjective)
         {
-            objectiveText.text = "Return to the beach. Keep the leaf shadow over the baby turtles.";
+            return;
         }
 
+        leafHasBeenPickedUp = true;
+
+        if (objectiveText != null)
+        {
+            objectiveText.text = "Return to the beach before the eggs hatch.";
+        }
+
+        StartCoroutine(ShowLeafTutorial());
         StartCoroutine(EggHatchTimer());
+    }
+
+    private IEnumerator ShowLeafTutorial()
+    {
+        if (leafTutorialText == null)
+        {
+            yield break;
+        }
+
+        leafTutorialText.text = "Cast the leaf shadow over the baby turtles to reset their danger timer and keep them safe.";
+        leafTutorialText.gameObject.SetActive(true);
+
+        yield return new WaitForSeconds(leafTutorialTime);
+
+        leafTutorialText.gameObject.SetActive(false);
     }
 
     private IEnumerator EggHatchTimer()
@@ -198,26 +238,117 @@ public class Level2ObjectiveManager : MonoBehaviour
 
     public void TurtleSaved()
     {
+        if (endingStarted || failedTurtleObjective)
+        {
+            return;
+        }
+
         turtlesSaved++;
+
+        if (turtlesSaved > turtlesNeeded)
+        {
+            turtlesSaved = turtlesNeeded;
+        }
+
         UpdateObjectiveText();
 
-        if (turtlesSaved >= turtlesNeeded && objectiveText != null)
+        if (turtlesSaved >= turtlesNeeded)
+        {
+            StartEnding();
+        }
+    }
+
+    public void CheckTurtleFailure()
+    {
+        if (endingStarted || failedTurtleObjective)
+        {
+            return;
+        }
+
+        if (turtlesSaved < turtlesNeeded)
+        {
+            failedTurtleObjective = true;
+
+            PlayerMovement playerMovement = FindObjectOfType<PlayerMovement>();
+
+            if (playerMovement != null)
+            {
+                playerMovement.UnlockMouse();
+                playerMovement.enabled = false;
+            }
+
+            PlayerInteraction playerInteraction = FindObjectOfType<PlayerInteraction>();
+
+            if (playerInteraction != null)
+            {
+                playerInteraction.enabled = false;
+            }
+
+            if (objectiveText != null)
+            {
+                objectiveText.text = "Some baby turtles did not make it.";
+            }
+
+            if (timerText != null)
+            {
+                timerText.gameObject.SetActive(false);
+            }
+
+            if (leafTutorialText != null)
+            {
+                leafTutorialText.gameObject.SetActive(false);
+            }
+
+            if (failPanel != null)
+            {
+                failPanel.SetActive(true);
+            }
+        }
+    }
+
+    private void StartEnding()
+    {
+        if (endingStarted)
+        {
+            return;
+        }
+
+        endingStarted = true;
+
+        if (objectiveText != null)
         {
             objectiveText.text = "You saved all the baby turtles!";
         }
 
-        if (turtlesSaved >= turtlesNeeded)
+        if (failPanel != null)
         {
-            if (objectiveText != null)
-            {
-                objectiveText.text = "You saved all the baby turtles!";
-            }
+            failPanel.SetActive(false);
+        }
 
-            if (endingSequence != null)
+        if (endingSequence != null)
+        {
+            endingSequence.SetActive(true);
+        }
+    }
+
+    private int GetAnimalsHealedCount()
+    {
+        int count = 0;
+
+        if (animalsToHeal == null)
+        {
+            return count;
+        }
+
+        for (int i = 0; i < animalsToHeal.Length; i++)
+        {
+            if (animalsToHeal[i] != null && animalsToHeal[i].isHealed)
             {
-                endingSequence.SetActive(true);
+                count++;
             }
         }
+
+        return count;
     }
 
     private void UpdateObjectiveText()
@@ -227,7 +358,11 @@ public class Level2ObjectiveManager : MonoBehaviour
             return;
         }
 
-        if (shedObject != null && !shedObject.activeInHierarchy)
+        if (failedTurtleObjective)
+        {
+            objectiveText.text = "Some baby turtles did not make it.";
+        }
+        else if (shedObject != null && !shedObject.activeInHierarchy)
         {
             objectiveText.text = "Unlock the shed: 0/1";
         }
@@ -238,9 +373,13 @@ public class Level2ObjectiveManager : MonoBehaviour
 
             objectiveText.text = "Save the forest animals: " + healed + "/" + total;
         }
-        else if (!eggsHatched)
+        else if (!leafHasBeenPickedUp)
         {
             objectiveText.text = "Find the shadow leaf: 0/1";
+        }
+        else if (!eggsHatched)
+        {
+            objectiveText.text = "Return to the beach before the eggs hatch.";
         }
         else
         {

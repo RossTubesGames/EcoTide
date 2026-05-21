@@ -8,7 +8,6 @@ public class GameManager : MonoBehaviour
 
     public int Money = 0;
 
-    // UI references (auto-detected when scene loads)
     public TextMeshProUGUI moneyText;
     public TextMeshProUGUI mushroomText;
     public TextMeshProUGUI tomatoText;
@@ -38,10 +37,8 @@ public class GameManager : MonoBehaviour
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        // Always try to assign money text (exists in all levels)
         moneyText = GameObject.Find("MoneyText")?.GetComponent<TextMeshProUGUI>();
 
-        // Only assign mushroom and tomato in Level 2
         if (scene.name == "Level 2")
         {
             mushroomText = GameObject.Find("MushroomText")?.GetComponent<TextMeshProUGUI>();
@@ -52,14 +49,12 @@ public class GameManager : MonoBehaviour
         }
         else
         {
-            // In Level 1 or other scenes, clear them out
             mushroomText = null;
             tomatoText = null;
         }
 
         UpdateMoneyUI();
     }
-
 
     public void AddMoney(int amount)
     {
@@ -75,24 +70,36 @@ public class GameManager : MonoBehaviour
             UpdateMoneyUI();
             return true;
         }
+
         return false;
     }
 
     public void UpdateMoneyUI()
     {
         if (moneyText != null)
+        {
             moneyText.text = "Money: " + Money;
+        }
     }
 
     public void UpdateMushroomUI(int count)
     {
         if (mushroomText != null)
+        {
             mushroomText.text = "Mushrooms: " + count;
+        }
     }
 
     public void UpdateTomatoUI(int count)
     {
         if (tomatoText != null)
+        {
             tomatoText.text = "Tomatoes: " + count;
+        }
+    }
+    public void ReturnToMainMenu()
+    {
+        Time.timeScale = 1f;
+        SceneManager.LoadScene("MainMenu");
     }
 }
