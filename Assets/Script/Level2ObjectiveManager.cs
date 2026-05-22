@@ -269,11 +269,15 @@ public class Level2ObjectiveManager : MonoBehaviour
         {
             failedTurtleObjective = true;
 
+            Time.timeScale = 1f;
+
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+
             PlayerMovement playerMovement = FindObjectOfType<PlayerMovement>();
 
             if (playerMovement != null)
             {
-                playerMovement.UnlockMouse();
                 playerMovement.enabled = false;
             }
 
@@ -303,6 +307,9 @@ public class Level2ObjectiveManager : MonoBehaviour
             {
                 failPanel.SetActive(true);
             }
+
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
         }
     }
 
